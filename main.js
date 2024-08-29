@@ -56,7 +56,26 @@ function drawDots() {
 }
 drawDots();
 
-addEventListener("mousemove", (event) => {});
+window.addEventListener("mousemove", (event) => {
+  let lst = [];
+  for (let i = 0; i < dots.length; i++) {
+    lst.push(
+      ((event.clientX - dots[i].x) ** 2 + (event.clientY - dots[i].y) ** 2) **
+        (1 / 2)
+    );
+  }
+  let dis1 = Math.min(...lst);
+  let dis1Index = lst.indexOf(dis1);
+  // console.log(dis1Index);
+  lst[lst.indexOf(dis1)] = 2000;
+  let dis2 = Math.min(...lst);
+  let dis2Index = lst.indexOf(dis2);
+
+  ctx.beginPath();
+  ctx.moveTo(dots[dis1Index].x, dots[dis1Index].y);
+  ctx.lineTo(dots[dis2Index].x, dots[dis2Index].y);
+  ctx.stroke();
+});
 
 function draw() {
   for (let i = 0; i < dots.length; i++) {
@@ -69,6 +88,8 @@ function draw() {
 
 function animate() {
   animationId = requestAnimationFrame(animate);
+  ctx.fillStyle = "rgba(255 , 255 , 255 , 0.2)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   draw();
 }
 animate();
