@@ -9,7 +9,7 @@ let heightBlock = 7;
 
 let dots = [];
 
-let showLines = [];
+let lines = [];
 
 let lineShouldShow = {
   dot1: null,
@@ -42,7 +42,7 @@ class Squere {
   }
 }
 
-function drawDots() {
+function createDots() {
   let widthUnit = innerWidth / (widthBlock + 1);
   let heightUnit = innerHeight / (heightBlock + 1);
   let count = 1;
@@ -59,7 +59,7 @@ function drawDots() {
     }
   }
 }
-drawDots();
+createDots();
 
 window.addEventListener("mousemove", (event) => {
   let lst = [];
@@ -80,6 +80,15 @@ window.addEventListener("mousemove", (event) => {
   lineShouldShow.dot2 = dots[dis2Index];
 });
 
+window.addEventListener("mousedown", (event) => {
+  let obj = {
+    dot1: lineShouldShow.dot1,
+    dot2: lineShouldShow.dot2,
+    color: "white",
+  };
+  lines.push(obj);
+});
+
 function draw() {
   for (let i = 0; i < dots.length; i++) {
     ctx.beginPath();
@@ -93,6 +102,14 @@ function draw() {
   ctx.lineTo(lineShouldShow.dot2.x, lineShouldShow.dot2.y);
   ctx.fillStyle = "rgba(0 , 0 , 0, 0.1)";
   ctx.stroke();
+
+  lines.forEach((line) => {
+    ctx.beginPath();
+    ctx.moveTo(line.dot1.x, line.dot1.y);
+    ctx.lineTo(line.dot2.x, line.dot2.y);
+    ctx.fillStyle = line.color;
+    ctx.stroke();
+  });
 }
 
 function animate() {
