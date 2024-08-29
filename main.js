@@ -11,6 +11,11 @@ let dots = [];
 
 let showLines = [];
 
+let lineShouldShow = {
+  dot1: null,
+  dot2: null,
+};
+
 class Dot {
   constructor(id, x, y) {
     this.id = id;
@@ -71,10 +76,8 @@ window.addEventListener("mousemove", (event) => {
   let dis2 = Math.min(...lst);
   let dis2Index = lst.indexOf(dis2);
 
-  ctx.beginPath();
-  ctx.moveTo(dots[dis1Index].x, dots[dis1Index].y);
-  ctx.lineTo(dots[dis2Index].x, dots[dis2Index].y);
-  ctx.stroke();
+  lineShouldShow.dot1 = dots[dis1Index];
+  lineShouldShow.dot2 = dots[dis2Index];
 });
 
 function draw() {
@@ -84,11 +87,17 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.fill();
   }
+
+  ctx.beginPath();
+  ctx.moveTo(lineShouldShow.dot1.x, lineShouldShow.dot1.y);
+  ctx.lineTo(lineShouldShow.dot2.x, lineShouldShow.dot2.y);
+  ctx.fillStyle = "rgba(0 , 0 , 0, 0.1)";
+  ctx.stroke();
 }
 
 function animate() {
   animationId = requestAnimationFrame(animate);
-  ctx.fillStyle = "rgba(255 , 255 , 255 , 0.2)";
+  ctx.fillStyle = "rgba(255 , 255 , 255 , 0.1)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   draw();
 }
