@@ -17,19 +17,22 @@ let lineShouldShow = {
 };
 
 class Dot {
-  constructor(id, x, y) {
+  constructor(id, x, y, xpos, ypos) {
     this.id = id;
     this.x = x;
     this.y = y;
+
+    this.xpos = xpos;
+    this.ypos = ypos;
   }
 }
 
 class Line {
-  constructor(id, d1, d2, color) {
-    this.id = id;
+  constructor(d1, d2, color, side) {
     this.start = d1;
     this.end = d2;
     this.color = color;
+    this.side = side;
   }
 }
 
@@ -52,7 +55,9 @@ function createDots() {
         new Dot(
           count,
           i * widthUnit + widthUnit / 2,
-          j * heightUnit + heightUnit / 2
+          j * heightUnit + heightUnit / 2,
+          i,
+          j
         )
       );
       count++;
@@ -71,7 +76,6 @@ window.addEventListener("mousemove", (event) => {
   }
   let dis1 = Math.min(...lst);
   let dis1Index = lst.indexOf(dis1);
-  // console.log(dis1Index);
   lst[lst.indexOf(dis1)] = 2000;
   let dis2 = Math.min(...lst);
   let dis2Index = lst.indexOf(dis2);
@@ -81,12 +85,15 @@ window.addEventListener("mousemove", (event) => {
 });
 
 window.addEventListener("mousedown", (event) => {
-  let obj = {
-    dot1: lineShouldShow.dot1,
-    dot2: lineShouldShow.dot2,
-    color: "white",
-  };
-  lines.push(obj);
+  if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
+    lines.push(
+      new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical")
+    );
+  } else {
+    lines.push(
+      new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal")
+    );
+  }
 });
 
 function draw() {
@@ -105,8 +112,8 @@ function draw() {
 
   lines.forEach((line) => {
     ctx.beginPath();
-    ctx.moveTo(line.dot1.x, line.dot1.y);
-    ctx.lineTo(line.dot2.x, line.dot2.y);
+    ctx.moveTo(line.start.x, line.start.y);
+    ctx.lineTo(line.end.x, line.end.y);
     ctx.fillStyle = line.color;
     ctx.stroke();
   });
