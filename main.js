@@ -17,13 +17,9 @@ let lineShouldShow = {
 };
 
 class Dot {
-  constructor(id, x, y, xpos, ypos) {
-    this.id = id;
+  constructor(x, y) {
     this.x = x;
     this.y = y;
-
-    this.xpos = xpos;
-    this.ypos = ypos;
   }
 }
 
@@ -33,34 +29,58 @@ class Line {
     this.end = d2;
     this.color = color;
     this.side = side;
+
+    if (side == "vertical") {
+      this.topRight = false;
+      this.topLeft = false;
+      this.right = false;
+      this.left = false;
+      this.bottomRight = false;
+      this.bottomLeft = false;
+    } else {
+      this.top = false;
+      this.rightTop = false;
+      this.leftTop = false;
+      this.bottom = false;
+      this.rightBottom = false;
+      this.leftBottom = false;
+    }
   }
 }
 
-class Squere {
-  constructor(line1, line2, line3, line4) {
-    this.line1 = line1;
-    this.line2 = line2;
-    this.line3 = line3;
-    this.line4 = line4;
+class Box {
+  constructor(startX, startY, topLine, rightLine, bottomLine, leftLine) {
+    this.startX = startX;
+    this.startY = startY;
+
+    this.topLine = topLine;
+    this.rightLine = rightLine;
+    this.bottomLine = bottomLine;
+    this.leftLine = leftLine;
+
+    this.topSel = false;
+    this.rightSel = false;
+    this.bottomSel = false;
+    this.leftSel = false;
   }
 }
 
 function createDots() {
   let widthUnit = innerWidth / (widthBlock + 1);
   let heightUnit = innerHeight / (heightBlock + 1);
-  let count = 1;
   for (let i = 0; i <= widthBlock; i++) {
     for (let j = 0; j <= heightBlock; j++) {
-      dots.push(
-        new Dot(
-          count,
-          i * widthUnit + widthUnit / 2,
-          j * heightUnit + heightUnit / 2,
-          i,
-          j
-        )
-      );
-      count++;
+      let x = i * widthUnit + widthUnit / 2;
+      let y = j * heightUnit + heightUnit / 2;
+      let newDot = new Dot(x, y);
+      dots.push(newDot);
+
+      let topline = { dot1: newDot, dot2: new Dot(x + widthUnit, y) };
+      let rightline = { dot1: new Dot(x + widthUnit, y), dot2: new Dot(x + widthUnit, y + heightUnit) };
+      let bottomline = { dot1: new Dot(), dot2: new Dot(x + widthUnit, y + heightUnit) };
+      let leftline = { dot1: newDot, dot2: new Dot(x + widthUnit, y + heightUnit) };
+
+      let newBox = new Box(x, y);
     }
   }
 }
@@ -69,10 +89,7 @@ createDots();
 window.addEventListener("mousemove", (event) => {
   let lst = [];
   for (let i = 0; i < dots.length; i++) {
-    lst.push(
-      ((event.clientX - dots[i].x) ** 2 + (event.clientY - dots[i].y) ** 2) **
-        (1 / 2)
-    );
+    lst.push(((event.clientX - dots[i].x) ** 2 + (event.clientY - dots[i].y) ** 2) ** (1 / 2));
   }
   let dis1 = Math.min(...lst);
   let dis1Index = lst.indexOf(dis1);
@@ -86,13 +103,9 @@ window.addEventListener("mousemove", (event) => {
 
 window.addEventListener("mousedown", (event) => {
   if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
-    lines.push(
-      new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical")
-    );
+    lines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical"));
   } else {
-    lines.push(
-      new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal")
-    );
+    lines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
   }
 });
 
