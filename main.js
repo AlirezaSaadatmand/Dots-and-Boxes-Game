@@ -16,11 +16,6 @@ let lines = [];
 
 let boxes = [];
 
-let lineShouldShow = {
-    dot1: undefined,
-    dot2: undefined,
-};
-
 class Dot {
     constructor(x, y) {
         this.x = x;
@@ -80,25 +75,34 @@ class Box {
 
 function createDots() {
     for (let i = 0; i <= widthBlock; i++) {
+        let lst = [];
         for (let j = 0; j <= heightBlock; j++) {
             let x = i * widthUnit + widthUnit / 2;
             let y = j * heightUnit + heightUnit / 2;
             let newDot = new Dot(x, y);
-            dots.push(newDot);
+            lst.push(newDot);
+        }
+        dots.push(lst);
+    }
 
-            let topline = { dot1: newDot, dot2: new Dot(x + widthUnit, y) };
-            let rightline = { dot1: new Dot(x + widthUnit, y), dot2: new Dot(x + widthUnit, y + heightUnit) };
-            let bottomline = { dot1: new Dot(), dot2: new Dot(x + widthUnit, y + heightUnit) };
-            let leftline = { dot1: newDot, dot2: new Dot(x + widthUnit, y + heightUnit) };
+    for (let i = 0; i < dots.length - 1; i++) {
+        for (let j = 0; j < dots[i].length - 1; j++) {
+            let topline = { dot1: dots[i][j], dot2: dots[i][j + 1] };
+            let rightline = { dot1: dots[i][j + 1], dot2: dots[i + 1][j + 1] };
+            let bottomline = { dot1: dots[i + 1][j + 1], dot2: dots[i + 1][j] };
+            let leftline = { dot1: dots[i + 1][j], dot2: dots[i][j] };
 
-            let newBox = new Box(x, y, topline, rightline, bottomline, leftline);
+            let newBox = new Box(dots[i][j].x, dots[i][j].y, topline, rightline, bottomline, leftline);
             boxes.push(newBox);
         }
     }
-    lineShouldShow.dot1 = dots[0];
-    lineShouldShow.dot2 = dots[1];
 }
 createDots();
+
+let lineShouldShow = {
+    dot1: dots[0][0],
+    dot2: dots[0][1],
+};
 
 function setLineOfBox(box, index) {
     if (index == 0) {
@@ -115,16 +119,17 @@ function setLineOfBox(box, index) {
 window.addEventListener("mousemove", (event) => {
     let lst = [];
     for (let i = 0; i < dots.length; i++) {
-        lst.push(((event.clientX - dots[i].x) ** 2 + (event.clientY - dots[i].y) ** 2) ** (1 / 2));
+        for (let j = 0; j < dots[i].length; j++) {
+            lst.push(((event.clientX - dots[i][j].x) ** 2 + (event.clientY - dots[i][j].y) ** 2) ** (1 / 2));
+        }
     }
     let dis1 = Math.min(...lst);
     let dis1Index = lst.indexOf(dis1);
     lst[lst.indexOf(dis1)] = 2000;
     let dis2 = Math.min(...lst);
     let dis2Index = lst.indexOf(dis2);
-
-    lineShouldShow.dot1 = dots[dis1Index];
-    lineShouldShow.dot2 = dots[dis2Index];
+    lineShouldShow.dot1 = dots[parseInt(dis1Index / dots[0].length)][dis1Index % dots[0].length];
+    lineShouldShow.dot2 = dots[parseInt(dis2Index / dots[0].length)][dis2Index % dots[0].length];
 });
 
 window.addEventListener("mousedown", (event) => {
@@ -147,10 +152,12 @@ window.addEventListener("mousedown", (event) => {
 
 function draw() {
     for (let i = 0; i < dots.length; i++) {
-        ctx.beginPath();
-        ctx.arc(dots[i].x, dots[i].y, 5, 0, Math.PI * 2, false);
-        ctx.fillStyle = "black";
-        ctx.fill();
+        for (let j = 0; j < dots[i].length; j++) {
+            ctx.beginPath();
+            ctx.arc(dots[i][j].x, dots[i][j].y, 5, 0, Math.PI * 2, false);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        }
     }
 
     ctx.beginPath();
