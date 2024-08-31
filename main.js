@@ -74,11 +74,11 @@ class Box {
 }
 
 function createDots() {
-    for (let i = 0; i <= widthBlock; i++) {
+    for (let i = 0; i <= heightBlock; i++) {
         let lst = [];
-        for (let j = 0; j <= heightBlock; j++) {
-            let x = i * widthUnit + widthUnit / 2;
-            let y = j * heightUnit + heightUnit / 2;
+        for (let j = 0; j <= widthBlock; j++) {
+            let x = j * widthUnit + widthUnit / 2;
+            let y = i * heightUnit + heightUnit / 2;
             let newDot = new Dot(x, y);
             lst.push(newDot);
         }
@@ -86,6 +86,7 @@ function createDots() {
     }
 
     for (let i = 0; i < dots.length - 1; i++) {
+        let lst = [];
         for (let j = 0; j < dots[i].length - 1; j++) {
             let topline = { dot1: dots[i][j], dot2: dots[i][j + 1] };
             let rightline = { dot1: dots[i][j + 1], dot2: dots[i + 1][j + 1] };
@@ -93,28 +94,17 @@ function createDots() {
             let leftline = { dot1: dots[i + 1][j], dot2: dots[i][j] };
 
             let newBox = new Box(dots[i][j].x, dots[i][j].y, topline, rightline, bottomline, leftline);
-            boxes.push(newBox);
+            lst.push(newBox);
         }
+        boxes.push(lst);
     }
 }
 createDots();
 
 let lineShouldShow = {
-    dot1: dots[0][0],
-    dot2: dots[0][1],
+    dot1: dots[parseInt(widthBlock / 2)][parseInt(heightBlock / 2)],
+    dot2: dots[parseInt(widthBlock / 2)][parseInt(heightBlock / 2) + 1],
 };
-
-function setLineOfBox(box, index) {
-    if (index == 0) {
-        box.topSel = true;
-    } else if (index == 1) {
-        box.rightSel == true;
-    } else if (index == 2) {
-        box.bottomSel = true;
-    } else {
-        box.leftSel = true;
-    }
-}
 
 window.addEventListener("mousemove", (event) => {
     let lst = [];
@@ -139,15 +129,26 @@ window.addEventListener("mousedown", (event) => {
         lines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
     }
 
-    boxes.forEach((box) => {
-        box.lines.forEach((line) => {
-            if ((lineShouldShow.dot1 == line.dot1 && lineShouldShow.dot2 == line.dot2) || (lineShouldShow.dot1 == line.dot2 && lineShouldShow.dot2 == line.dot1)) {
-                console.log("hello");
-                let index = box.lines.indexOf(line);
-                setLineOfBox(box, index);
+    for (let row = 0; row < boxes.length; row++) {
+        for (let col = 0; col < boxes[row].length; col++) {
+            for (let line = 0; line < 4; line++) {
+                if (
+                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
+                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
+                ) {
+                    if (line == 0) {
+                        boxes[row][col].topSel = true;
+                    } else if (line == 1) {
+                        boxes[row][col].rightSel = true;
+                    } else if (line == 2) {
+                        boxes[row][col].bottomSel = true;
+                    } else {
+                        boxes[row][col].leftSel = true;
+                    }
+                }
             }
-        });
-    });
+        }
+    }
 });
 
 function draw() {
@@ -174,9 +175,12 @@ function draw() {
         ctx.stroke();
     });
 
-    boxes.forEach((box) => {
-        box.draw();
-    });
+    for (let i = 0; i < boxes.length; i++) {
+        for (let j = 0; j < boxes[i].length; j++) {
+            boxes[i][j].draw();
+        }
+    }
+    // console.log(boxes[0][0].topSel, boxes[0][0].rightSel, boxes[0][0].bottomSel, boxes[0][0].leftSel);
 }
 
 function animate() {
