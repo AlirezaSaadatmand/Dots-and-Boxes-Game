@@ -102,8 +102,8 @@ function createDots() {
 createDots();
 
 let lineShouldShow = {
-    dot1: dots[parseInt(widthBlock / 2)][parseInt(heightBlock / 2)],
-    dot2: dots[parseInt(widthBlock / 2)][parseInt(heightBlock / 2) + 1],
+    dot1: dots[parseInt(heightBlock / 2)][parseInt(widthBlock / 2)],
+    dot2: dots[parseInt(heightBlock / 2) + 1][parseInt(widthBlock / 2)],
 };
 
 window.addEventListener("mousemove", (event) => {
@@ -138,13 +138,26 @@ window.addEventListener("mousedown", (event) => {
                 ) {
                     if (line == 0) {
                         boxes[row][col].topSel = true;
+                        if (row != 0) {
+                            boxes[row - 1][col].bottomSel = true;
+                        }
                     } else if (line == 1) {
                         boxes[row][col].rightSel = true;
+                        if (col != boxes[row].length - 1) {
+                            boxes[row][col + 1].leftSel = true;
+                        }
                     } else if (line == 2) {
                         boxes[row][col].bottomSel = true;
+                        if (row != boxes.length - 1) {
+                            boxes[row + 1][col].topSel = true;
+                        }
                     } else {
                         boxes[row][col].leftSel = true;
+                        if (col != 0) {
+                            boxes[row][col - 1].rightSel = true;
+                        }
                     }
+                    break;
                 }
             }
         }
@@ -164,7 +177,7 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(lineShouldShow.dot1.x, lineShouldShow.dot1.y);
     ctx.lineTo(lineShouldShow.dot2.x, lineShouldShow.dot2.y);
-    ctx.fillStyle = "rgba(0 , 0 , 0, 0.1)";
+    ctx.fillStyle = "rgb(0 , 0 , 0)";
     ctx.stroke();
 
     lines.forEach((line) => {
@@ -180,7 +193,6 @@ function draw() {
             boxes[i][j].draw();
         }
     }
-    // console.log(boxes[0][0].topSel, boxes[0][0].rightSel, boxes[0][0].bottomSel, boxes[0][0].leftSel);
 }
 
 function animate() {
