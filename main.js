@@ -12,7 +12,12 @@ let heightUnit = innerHeight / (heightBlock + 1);
 
 let dots = [];
 
-let lines = [];
+let lines = {
+    horizontal: [],
+    vertical: [],
+};
+
+let selectLines = [];
 
 let boxes = [];
 
@@ -24,27 +29,9 @@ class Dot {
 }
 
 class Line {
-    constructor(d1, d2, color, side) {
-        this.start = d1;
-        this.end = d2;
-        this.color = color;
-        this.side = side;
-
-        if (side == "vertical") {
-            this.topRight = false;
-            this.topLeft = false;
-            this.right = false;
-            this.left = false;
-            this.bottomRight = false;
-            this.bottomLeft = false;
-        } else {
-            this.top = false;
-            this.rightTop = false;
-            this.leftTop = false;
-            this.bottom = false;
-            this.rightBottom = false;
-            this.leftBottom = false;
-        }
+    constructor(d1, d2) {
+        this.dot1 = d1;
+        this.dot2 = d2;
     }
 }
 
@@ -73,6 +60,14 @@ class Box {
     }
 }
 
+class bot {
+    calculate() {
+        let lst = [];
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = 0; j < boxes[i].length; j++) {}
+        }
+    }
+}
 function createDots() {
     for (let i = 0; i <= heightBlock; i++) {
         let lst = [];
@@ -85,16 +80,27 @@ function createDots() {
         dots.push(lst);
     }
 
-    for (let i = 0; i < dots.length - 1; i++) {
-        let lst = [];
+    for (let i = 0; i < dots.length; i++) {
+        let hlst = [];
         for (let j = 0; j < dots[i].length - 1; j++) {
-            let topline = { dot1: dots[i][j], dot2: dots[i][j + 1] };
-            let rightline = { dot1: dots[i][j + 1], dot2: dots[i + 1][j + 1] };
-            let bottomline = { dot1: dots[i + 1][j + 1], dot2: dots[i + 1][j] };
-            let leftline = { dot1: dots[i + 1][j], dot2: dots[i][j] };
+            hlst.push(new Line(dots[i][j], dots[i][j + 1]));
+        }
+        lines.horizontal.push(hlst);
 
-            let newBox = new Box(dots[i][j].x, dots[i][j].y, topline, rightline, bottomline, leftline);
-            lst.push(newBox);
+        let vlst = [];
+        if (i != dots.length - 1) {
+            for (let j = 0; j < dots[i].length; j++) {
+                vlst.push(new Line(dots[i][j], dots[i + 1][j]));
+            }
+            lines.vertical.push(vlst);
+        }
+    }
+
+    for (let i = 0; i < lines.horizontal.length - 1; i++) {
+        let lst = [];
+        for (let j = 0; j < lines.horizontal[i].length; j++) {
+            var box = new Box(lines.horizontal[i][j].dot1.x, lines.horizontal[i][j].dot1.y, lines.horizontal[i][j], lines.vertical[i][j + 1], lines.horizontal[i + 1][j], lines.vertical[i][j]);
+            lst.push(box);
         }
         boxes.push(lst);
     }
@@ -106,7 +112,7 @@ let lineShouldShow = {
     dot2: dots[parseInt(heightBlock / 2) + 1][parseInt(widthBlock / 2)],
 };
 
-window.addEventListener("mousemove", (event) => {
+addEventListener("mousemove", (event) => {
     let lst = [];
     for (let i = 0; i < dots.length; i++) {
         for (let j = 0; j < dots[i].length; j++) {
@@ -122,13 +128,34 @@ window.addEventListener("mousemove", (event) => {
     lineShouldShow.dot2 = dots[parseInt(dis2Index / dots[0].length)][dis2Index % dots[0].length];
 });
 
-window.addEventListener("mousedown", (event) => {
+addEventListener("mousedown", (event) => {
     if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
-        lines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical"));
+        selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical"));
+        for (let i = 0; i < lines.vertical.length; i++) {
+            for (let j = 0; j < lines.vertical[i].length; j++) {
+                if (
+                    (lines.vertical[i][j].dot1 == lineShouldShow.dot1 && lines.vertical[i][j].dot2 == lineShouldShow.dot2) ||
+                    (lines.vertical[i][j].dot1 == lineShouldShow.dot2 && lines.vertical[i][j].dot2 == lineShouldShow.dot1)
+                ) {
+                    lines.vertical[i].splice(j, 1);
+                    break;
+                }
+            }
+        }
     } else {
-        lines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
+        selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
+        for (let i = 0; i < lines.horizontal.length; i++) {
+            for (let j = 0; j < lines.horizontal[i].length; j++) {
+                if (
+                    (lines.horizontal[i][j].dot1 == lineShouldShow.dot1 && lines.horizontal[i][j].dot2 == lineShouldShow.dot2) ||
+                    (lines.horizontal[i][j].dot1 == lineShouldShow.dot2 && lines.horizontal[i][j].dot2 == lineShouldShow.dot1)
+                ) {
+                    lines.horizontal[i].splice(j, 1);
+                    break;
+                }
+            }
+        }
     }
-
     for (let row = 0; row < boxes.length; row++) {
         for (let col = 0; col < boxes[row].length; col++) {
             for (let line = 0; line < 4; line++) {
@@ -162,6 +189,7 @@ window.addEventListener("mousedown", (event) => {
             }
         }
     }
+    console.log(lines);
 });
 
 function draw() {
@@ -180,10 +208,10 @@ function draw() {
     ctx.fillStyle = "rgb(0 , 0 , 0)";
     ctx.stroke();
 
-    lines.forEach((line) => {
+    selectLines.forEach((line) => {
         ctx.beginPath();
-        ctx.moveTo(line.start.x, line.start.y);
-        ctx.lineTo(line.end.x, line.end.y);
+        ctx.moveTo(line.dot1.x, line.dot1.y);
+        ctx.lineTo(line.dot2.x, line.dot2.y);
         ctx.fillStyle = line.color;
         ctx.stroke();
     });
