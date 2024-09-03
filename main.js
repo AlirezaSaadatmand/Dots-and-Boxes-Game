@@ -4,8 +4,8 @@ const ctx = canvas.getContext("2d");
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-let widthBlock = 15;
-let heightBlock = 7;
+let widthBlock = 10;
+let heightBlock = 5;
 
 let widthUnit = innerWidth / (widthBlock + 1);
 let heightUnit = innerHeight / (heightBlock + 1);
@@ -56,7 +56,9 @@ class Box {
         this.rightSel = false;
         this.bottomSel = false;
         this.leftSel = false;
-
+        this.state = [this.topSel, this.rightSel, this.bottomSel, this.leftSel];
+    }
+    update() {
         this.state = [this.topSel, this.rightSel, this.bottomSel, this.leftSel];
     }
     draw() {
@@ -98,7 +100,7 @@ class Bot {
                 for (let i = 0; i < 2; i++) {
                     for (let stat of twoBox[i].state) {
                         if (stat) {
-                            boxState[i]++;
+                            boxState[i] = boxState[i] + 1;
                         }
                     }
                 }
@@ -115,7 +117,7 @@ class Bot {
                 for (let i = 0; i < 1; i++) {
                     for (let j = 0; j < twoBox[i].state.length; j++) {
                         if (twoBox[i].state[j]) {
-                            boxState[i]++;
+                            boxState[i] = boxState[i] + 1;
                         }
                     }
                 }
@@ -137,7 +139,7 @@ class Bot {
                 for (let i = 0; i < 2; i++) {
                     for (let j = 0; j < twoBox[i].state.length; j++) {
                         if (twoBox[i].state[j]) {
-                            boxState[i]++;
+                            boxState[i] = boxState[i] + 1;
                         }
                     }
                 }
@@ -154,7 +156,7 @@ class Bot {
                 for (let i = 0; i < 1; i++) {
                     for (let j = 0; j < twoBox[i].state.length; j++) {
                         if (twoBox[i].state[j]) {
-                            boxState[i]++;
+                            boxState[i] = boxState[i] + 1;
                         }
                     }
                 }
@@ -199,15 +201,16 @@ class Bot {
 
     choose() {
         // console.log(this.veryGoodMoves, this.goodMoves, this.badMoves);
-        if (this.verGoodMoves) {
-            let index = Math.floor(Math.random() * (this.veryGoodMoves.length - 1));
+        if (this.veryGoodMoves.length != 0) {
+            console.log("hello");
+            let index = 0;
             return this.veryGoodMoves[index];
         } else {
-            if (this.goodMoves !== []) {
-                let index = Math.floor(Math.random() * (this.goodMoves.length - 1));
+            if (this.goodMoves.length != 0) {
+                let index = Math.floor(Math.random() * this.goodMoves.length);
                 return this.goodMoves[index];
             } else {
-                let index = Math.floor(Math.random() * (this.badMoves.length - 1));
+                let index = Math.floor(Math.random() * this.badMoves.length);
                 return this.badMoves[index];
             }
         }
@@ -260,6 +263,69 @@ let lineShouldShow = {
     dot2: dots[parseInt(heightBlock / 2) + 1][parseInt(widthBlock / 2)],
 };
 
+function fixBox(state, line = null) {
+    for (let row = 0; row < boxes.length; row++) {
+        for (let col = 0; col < boxes[row].length; col++) {
+            for (let line = 0; line < 4; line++) {
+                if (
+                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
+                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
+                ) {
+                    if (line == 0) {
+                        boxes[row][col].topSel = true;
+                        if (row != 0) {
+                            boxes[row - 1][col].bottomSel = true;
+                        }
+                    } else if (line == 1) {
+                        boxes[row][col].rightSel = true;
+                        if (col != boxes[row].length - 1) {
+                            boxes[row][col + 1].leftSel = true;
+                        }
+                    } else if (line == 2) {
+                        boxes[row][col].bottomSel = true;
+                        if (row != boxes.length - 1) {
+                            boxes[row + 1][col].topSel = true;
+                        }
+                    } else {
+                        boxes[row][col].leftSel = true;
+                        if (col != 0) {
+                            boxes[row][col - 1].rightSel = true;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    if (state) {
+        if (line.side == "horizontal") {
+            for (let i = 0; i < lines.horizontal.length; i++) {
+                for (let j = 0; j < lines.horizontal[i].length; j++) {
+                    if (
+                        (lines.horizontal[i][j].dot1 == lineShouldShow.dot1 && lines.horizontal[i][j].dot2 == lineShouldShow.dot2) ||
+                        (lines.horizontal[i][j].dot1 == lineShouldShow.dot2 && lines.horizontal[i][j].dot2 == lineShouldShow.dot1)
+                    ) {
+                        lines.horizontal[i].splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        } else {
+            for (let i = 0; i < lines.vertical.length; i++) {
+                for (let j = 0; j < lines.vertical[i].length; j++) {
+                    if (
+                        (lines.vertical[i][j].dot1 == lineShouldShow.dot1 && lines.vertical[i][j].dot2 == lineShouldShow.dot2) ||
+                        (lines.vertical[i][j].dot1 == lineShouldShow.dot2 && lines.vertical[i][j].dot2 == lineShouldShow.dot1)
+                    ) {
+                        lines.vertical[i].splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 addEventListener("mousemove", (event) => {
     if (turn == "player") {
         let lst = [];
@@ -309,39 +375,7 @@ addEventListener("mousedown", (event) => {
                 }
             }
         }
-        for (let row = 0; row < boxes.length; row++) {
-            for (let col = 0; col < boxes[row].length; col++) {
-                for (let line = 0; line < 4; line++) {
-                    if (
-                        (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
-                        (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
-                    ) {
-                        if (line == 0) {
-                            boxes[row][col].topSel = true;
-                            if (row != 0) {
-                                boxes[row - 1][col].bottomSel = true;
-                            }
-                        } else if (line == 1) {
-                            boxes[row][col].rightSel = true;
-                            if (col != boxes[row].length - 1) {
-                                boxes[row][col + 1].leftSel = true;
-                            }
-                        } else if (line == 2) {
-                            boxes[row][col].bottomSel = true;
-                            if (row != boxes.length - 1) {
-                                boxes[row + 1][col].topSel = true;
-                            }
-                        } else {
-                            boxes[row][col].leftSel = true;
-                            if (col != 0) {
-                                boxes[row][col - 1].rightSel = true;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        fixBox(false);
     }
 });
 
@@ -380,6 +414,7 @@ function draw() {
     for (let i = 0; i < boxes.length; i++) {
         for (let j = 0; j < boxes[i].length; j++) {
             boxes[i][j].draw();
+            boxes[i][j].update();
         }
     }
 }
@@ -390,13 +425,14 @@ function animate() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     draw();
     if (turn == "computer") {
-        // setTimeout(() => {
-        // bot.calculate();
         let line = bot.calculate();
-        line.color = "red";
+        lineShouldShow.dot1 = line.dot1;
+        lineShouldShow.dot2 = line.dot2;
+        fixBox(true, line);
+
+        line.color = "rgb(255 , 0 , 0)";
         botSelectedLines.push(line);
         turn = "player";
-        // }, (Math.random() + 1) * 1000);
     }
 }
 animate();
