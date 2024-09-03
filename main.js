@@ -29,9 +29,10 @@ class Dot {
 }
 
 class Line {
-    constructor(d1, d2) {
+    constructor(d1, d2, side) {
         this.dot1 = d1;
         this.dot2 = d2;
+        this.side = side;
     }
 }
 
@@ -51,6 +52,8 @@ class Box {
         this.rightSel = false;
         this.bottomSel = false;
         this.leftSel = false;
+
+        this.state = [this.topSel, this.rightSel, this.bottomSel, this.leftSel];
     }
     draw() {
         if (this.topSel && this.rightSel && this.bottomSel && this.leftSel) {
@@ -61,11 +64,91 @@ class Box {
 }
 
 class bot {
+    constructor() {
+        this.veryGoodMove = [];
+        this.goodMoves = [];
+        this.badMoves = [];
+    }
     calculate() {
-        let lst = [];
-        for (let i = 0; i < boxes.length; i++) {
-            for (let j = 0; j < boxes[i].length; j++) {}
+        let lst = { horizontal: [], vertical: [] };
+        for (let i = 0; i < lines.horizontal.length; i++) {
+            for (let j = 0; j < lines.horizontal[i].length; j++) {
+                lst.horizontal.push(lines.horizontal[i][j]);
+            }
         }
+        for (let i = 0; i < lines.vertical.length; i++) {
+            for (let j = 0; j < lines.vertical[i].length; j++) {
+                lst.vertical.push(lines.vertical[i][j]);
+            }
+        }
+
+        for (let line of lst.horizontal) {
+            let twoBox = this.check(lst[index]);
+
+            let boxState = [0, 0];
+
+            for (let i = 0; i < 2; i++) {
+                for (let state of twoBox[i].state) {
+                    if (state) {
+                        boxState[i]++;
+                    }
+                }
+            }
+            if (boxState[0] < 3 && boxState[1] < 3) {
+                this.goodMoves.push(line);
+            } else {
+                this.badMoves.push(line);
+            }
+
+            for (let line of lst.vertical) {
+                let twoBox = this.check(lst[index]);
+
+                let boxState = [0, 0];
+
+                for (let i = 0; i < 2; i++) {
+                    for (let state of twoBox[i].state) {
+                        if (state) {
+                            boxState[i]++;
+                        }
+                    }
+                }
+                if (boxState[0] == 3 || boxState[1] == 3) {
+                    this.veryGoodMoves.push(line);
+                } else if (boxState[0] == 2 || boxState[1] == 2) {
+                    this.badMoves.push(line);
+                } else if (boxState[0] == 1 || boxState[1] == 1) {
+                    this.goodMoves.push(line);
+                }
+            }
+        }
+    }
+    check(line) {
+        for (let i = 0; i < boxes.length; i++) {
+            for (let j = 0; j < boxes[i].length; j++) {
+                for (let k = 0; k < 4; k++) {
+                    if (boxes[i][j].lines[k] == line) {
+                        if (line.side == "vertical") {
+                            return boxes[i][j], boxes[i][j + 1];
+                        } else {
+                            return [boxes[i][j], boxes[i + 1][j]];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    choose() {
+        if (this.verGoodMoves != []) {
+            var line = Math.floor(Math.random() * (this.veryGoodMoves.length - 1));
+        } else {
+            if (this.goodMoves != []) {
+                var line = Math.floor(Math.random() * (this.goodMoves.length - 1));
+            } else {
+                var line = Math.floor(Math.random() * (this.badMoves.length - 1));
+            }
+        }
+        return line;
     }
 }
 function createDots() {
@@ -83,14 +166,14 @@ function createDots() {
     for (let i = 0; i < dots.length; i++) {
         let hlst = [];
         for (let j = 0; j < dots[i].length - 1; j++) {
-            hlst.push(new Line(dots[i][j], dots[i][j + 1]));
+            hlst.push(new Line(dots[i][j], dots[i][j + 1], "horizontal"));
         }
         lines.horizontal.push(hlst);
 
         let vlst = [];
         if (i != dots.length - 1) {
             for (let j = 0; j < dots[i].length; j++) {
-                vlst.push(new Line(dots[i][j], dots[i + 1][j]));
+                vlst.push(new Line(dots[i][j], dots[i + 1][j], "vertical"));
             }
             lines.vertical.push(vlst);
         }
