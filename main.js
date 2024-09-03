@@ -345,7 +345,23 @@ addEventListener("mousemove", (event) => {
 });
 
 addEventListener("mousedown", (event) => {
-    if (turn == "player") {
+    let state = true;
+    for (let i = 0; i < selectLines.length; i++) {
+        if ((lineShouldShow.dot1 == selectLines[i].dot1 && lineShouldShow.dot2 == selectLines[i].dot2) || (lineShouldShow.dot1 == selectLines[i].dot2 && lineShouldShow.dot2 == selectLines[i].dot1)) {
+            state = false;
+        }
+    }
+    if (state) {
+        for (let i = 0; i < botSelectedLines.length; i++) {
+            if (
+                (lineShouldShow.dot1 == botSelectedLines[i].dot1 && lineShouldShow.dot2 == botSelectedLines[i].dot2) ||
+                (lineShouldShow.dot1 == botSelectedLines[i].dot2 && lineShouldShow.dot2 == botSelectedLines[i].dot1)
+            ) {
+                state = false;
+            }
+        }
+    }
+    if (turn == "player" && state) {
         turn = "computer";
 
         if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
@@ -407,7 +423,8 @@ function draw() {
         ctx.beginPath();
         ctx.moveTo(line.dot1.x, line.dot1.y);
         ctx.lineTo(line.dot2.x, line.dot2.y);
-        ctx.fillStyle = line.color;
+        ctx.fillStyle = "red";
+        ctx.fill();
         ctx.stroke();
     });
 
