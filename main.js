@@ -57,13 +57,19 @@ class Box {
         this.bottomSel = false;
         this.leftSel = false;
         this.state = [this.topSel, this.rightSel, this.bottomSel, this.leftSel];
+
+        this.lastChage = "";
     }
     update() {
         this.state = [this.topSel, this.rightSel, this.bottomSel, this.leftSel];
     }
     draw() {
         if (this.topSel && this.rightSel && this.bottomSel && this.leftSel) {
-            ctx.fillStyle = "rgb(0 , 0 , 0)";
+            if (this.lastChage == "player") {
+                ctx.fillStyle = "rgb(0 , 0 , 0)";
+            } else {
+                ctx.fillStyle = "rgb(255 , 0 , 0)";
+            }
             ctx.fillRect(this.startX, this.startY, widthUnit, heightUnit);
         }
     }
@@ -202,16 +208,15 @@ class Bot {
     choose() {
         // console.log(this.veryGoodMoves, this.goodMoves, this.badMoves);
         if (this.veryGoodMoves.length != 0) {
-            console.log("hello");
-            let index = 0;
-            return this.veryGoodMoves[index];
+            let index = Math.floor(Math.random() * this.veryGoodMoves.length);
+            return [this.veryGoodMoves[index], "verygood"];
         } else {
             if (this.goodMoves.length != 0) {
                 let index = Math.floor(Math.random() * this.goodMoves.length);
-                return this.goodMoves[index];
+                return [this.goodMoves[index], "good"];
             } else {
                 let index = Math.floor(Math.random() * this.badMoves.length);
-                return this.badMoves[index];
+                return [this.badMoves[index], "bad"];
             }
         }
     }
@@ -271,6 +276,11 @@ function fixBox(state, line = null) {
                     (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
                     (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
                 ) {
+                    if (state) {
+                        boxes[row][col].lastChage = "bot";
+                    } else {
+                        boxes[row][col].lastChage = "player";
+                    }
                     if (line == 0) {
                         boxes[row][col].topSel = true;
                         if (row != 0) {
@@ -292,7 +302,6 @@ function fixBox(state, line = null) {
                             boxes[row][col - 1].rightSel = true;
                         }
                     }
-                    break;
                 }
             }
         }
@@ -408,14 +417,15 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(lineShouldShow.dot1.x, lineShouldShow.dot1.y);
     ctx.lineTo(lineShouldShow.dot2.x, lineShouldShow.dot2.y);
-    ctx.fillStyle = "rgb(0 , 0 , 0)";
+    ctx.strokeStyle = "rgb(0 , 0 , 0)";
     ctx.stroke();
 
     selectLines.forEach((line) => {
         ctx.beginPath();
         ctx.moveTo(line.dot1.x, line.dot1.y);
         ctx.lineTo(line.dot2.x, line.dot2.y);
-        ctx.fillStyle = line.color;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = line.color;
         ctx.stroke();
     });
 
@@ -423,7 +433,8 @@ function draw() {
         ctx.beginPath();
         ctx.moveTo(line.dot1.x, line.dot1.y);
         ctx.lineTo(line.dot2.x, line.dot2.y);
-        ctx.fillStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgb(255 , 0 , 0)";
         ctx.fill();
         ctx.stroke();
     });
@@ -443,13 +454,13 @@ function animate() {
     draw();
     if (turn == "computer") {
         let line = bot.calculate();
-        lineShouldShow.dot1 = line.dot1;
-        lineShouldShow.dot2 = line.dot2;
-        fixBox(true, line);
-
-        line.color = "rgb(255 , 0 , 0)";
-        botSelectedLines.push(line);
-        turn = "player";
+        lineShouldShow.dot1 = line[0].dot1;
+        lineShouldShow.dot2 = line[0].dot2;
+        fixBox(true, line[0]);
+        botSelectedLines.push(line[0]);
+        if (line[1] != "verygood") {
+            turn = "player";
+        }
     }
 }
 animate();
