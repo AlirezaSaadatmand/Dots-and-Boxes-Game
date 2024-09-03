@@ -18,8 +18,11 @@ let lines = {
 };
 
 let selectLines = [];
+let botSelectedLines = [];
 
 let boxes = [];
+
+let turn = "player";
 
 class Dot {
     constructor(x, y) {
@@ -29,10 +32,11 @@ class Dot {
 }
 
 class Line {
-    constructor(d1, d2, side) {
+    constructor(d1, d2, side, color) {
         this.dot1 = d1;
         this.dot2 = d2;
         this.side = side;
+        this.color = color;
     }
 }
 
@@ -63,13 +67,16 @@ class Box {
     }
 }
 
-class bot {
+class Bot {
     constructor() {
-        this.veryGoodMove = [];
+        this.veryGoodMoves = [];
         this.goodMoves = [];
         this.badMoves = [];
     }
     calculate() {
+        this.veryGoodMoves = [];
+        this.goodMoves = [];
+        this.badMoves = [];
         let lst = { horizontal: [], vertical: [] };
         for (let i = 0; i < lines.horizontal.length; i++) {
             for (let j = 0; j < lines.horizontal[i].length; j++) {
@@ -82,32 +89,15 @@ class bot {
             }
         }
 
+        // horisontal
         for (let line of lst.horizontal) {
-            let twoBox = this.check(lst[index]);
-
-            let boxState = [0, 0];
-
-            for (let i = 0; i < 2; i++) {
-                for (let state of twoBox[i].state) {
-                    if (state) {
-                        boxState[i]++;
-                    }
-                }
-            }
-            if (boxState[0] < 3 && boxState[1] < 3) {
-                this.goodMoves.push(line);
-            } else {
-                this.badMoves.push(line);
-            }
-
-            for (let line of lst.vertical) {
-                let twoBox = this.check(lst[index]);
-
+            let twoBox = this.check(line);
+            if (twoBox.length == 2) {
                 let boxState = [0, 0];
 
                 for (let i = 0; i < 2; i++) {
-                    for (let state of twoBox[i].state) {
-                        if (state) {
+                    for (let stat of twoBox[i].state) {
+                        if (stat) {
                             boxState[i]++;
                         }
                     }
@@ -116,11 +106,68 @@ class bot {
                     this.veryGoodMoves.push(line);
                 } else if (boxState[0] == 2 || boxState[1] == 2) {
                     this.badMoves.push(line);
-                } else if (boxState[0] == 1 || boxState[1] == 1) {
+                } else {
+                    this.goodMoves.push(line);
+                }
+            } else {
+                let boxState = [0];
+
+                for (let i = 0; i < 1; i++) {
+                    for (let j = 0; j < twoBox[i].state.length; j++) {
+                        if (twoBox[i].state[j]) {
+                            boxState[i]++;
+                        }
+                    }
+                }
+                if (boxState[0] == 3) {
+                    this.veryGoodMoves.push(line);
+                } else if (boxState[0] == 2) {
+                    this.badMoves.push(line);
+                } else {
                     this.goodMoves.push(line);
                 }
             }
         }
+        // vertical
+        for (let line of lst.vertical) {
+            let twoBox = this.check(line);
+            if (twoBox.length == 2) {
+                let boxState = [0, 0];
+
+                for (let i = 0; i < 2; i++) {
+                    for (let j = 0; j < twoBox[i].state.length; j++) {
+                        if (twoBox[i].state[j]) {
+                            boxState[i]++;
+                        }
+                    }
+                }
+                if (boxState[0] == 3 || boxState[1] == 3) {
+                    this.veryGoodMoves.push(line);
+                } else if (boxState[0] == 2 || boxState[1] == 2) {
+                    this.badMoves.push(line);
+                } else {
+                    this.goodMoves.push(line);
+                }
+            } else {
+                let boxState = [0];
+
+                for (let i = 0; i < 1; i++) {
+                    for (let j = 0; j < twoBox[i].state.length; j++) {
+                        if (twoBox[i].state[j]) {
+                            boxState[i]++;
+                        }
+                    }
+                }
+                if (boxState[0] == 3) {
+                    this.veryGoodMoves.push(line);
+                } else if (boxState[0] == 2) {
+                    this.badMoves.push(line);
+                } else {
+                    this.goodMoves.push(line);
+                }
+            }
+        }
+        return this.choose();
     }
     check(line) {
         for (let i = 0; i < boxes.length; i++) {
@@ -128,9 +175,21 @@ class bot {
                 for (let k = 0; k < 4; k++) {
                     if (boxes[i][j].lines[k] == line) {
                         if (line.side == "vertical") {
-                            return boxes[i][j], boxes[i][j + 1];
+                            if (j == 0) {
+                                return [boxes[i][j]];
+                            } else if (j != boxes[i].length - 1) {
+                                return [boxes[i][j], boxes[i][j + 1]];
+                            } else {
+                                return [boxes[i][j]];
+                            }
                         } else {
-                            return [boxes[i][j], boxes[i + 1][j]];
+                            if (i == 0) {
+                                return [boxes[i][j]];
+                            } else if (i != boxes.length - 1) {
+                                return [boxes[i][j], boxes[i + 1][j]];
+                            } else {
+                                return [boxes[i][j]];
+                            }
                         }
                     }
                 }
@@ -139,18 +198,24 @@ class bot {
     }
 
     choose() {
-        if (this.verGoodMoves != []) {
-            var line = Math.floor(Math.random() * (this.veryGoodMoves.length - 1));
+        // console.log(this.veryGoodMoves, this.goodMoves, this.badMoves);
+        if (this.verGoodMoves) {
+            let index = Math.floor(Math.random() * (this.veryGoodMoves.length - 1));
+            return this.veryGoodMoves[index];
         } else {
-            if (this.goodMoves != []) {
-                var line = Math.floor(Math.random() * (this.goodMoves.length - 1));
+            if (this.goodMoves !== []) {
+                let index = Math.floor(Math.random() * (this.goodMoves.length - 1));
+                return this.goodMoves[index];
             } else {
-                var line = Math.floor(Math.random() * (this.badMoves.length - 1));
+                let index = Math.floor(Math.random() * (this.badMoves.length - 1));
+                return this.badMoves[index];
             }
         }
-        return line;
     }
 }
+
+let bot = new Bot();
+
 function createDots() {
     for (let i = 0; i <= heightBlock; i++) {
         let lst = [];
@@ -166,14 +231,14 @@ function createDots() {
     for (let i = 0; i < dots.length; i++) {
         let hlst = [];
         for (let j = 0; j < dots[i].length - 1; j++) {
-            hlst.push(new Line(dots[i][j], dots[i][j + 1], "horizontal"));
+            hlst.push(new Line(dots[i][j], dots[i][j + 1], "horizontal", "white"));
         }
         lines.horizontal.push(hlst);
 
         let vlst = [];
         if (i != dots.length - 1) {
             for (let j = 0; j < dots[i].length; j++) {
-                vlst.push(new Line(dots[i][j], dots[i + 1][j], "vertical"));
+                vlst.push(new Line(dots[i][j], dots[i + 1][j], "vertical", "white"));
             }
             lines.vertical.push(vlst);
         }
@@ -196,83 +261,88 @@ let lineShouldShow = {
 };
 
 addEventListener("mousemove", (event) => {
-    let lst = [];
-    for (let i = 0; i < dots.length; i++) {
-        for (let j = 0; j < dots[i].length; j++) {
-            lst.push(((event.clientX - dots[i][j].x) ** 2 + (event.clientY - dots[i][j].y) ** 2) ** (1 / 2));
+    if (turn == "player") {
+        let lst = [];
+        for (let i = 0; i < dots.length; i++) {
+            for (let j = 0; j < dots[i].length; j++) {
+                lst.push(((event.clientX - dots[i][j].x) ** 2 + (event.clientY - dots[i][j].y) ** 2) ** (1 / 2));
+            }
         }
+        let dis1 = Math.min(...lst);
+        let dis1Index = lst.indexOf(dis1);
+        lst[lst.indexOf(dis1)] = 2000;
+        let dis2 = Math.min(...lst);
+        let dis2Index = lst.indexOf(dis2);
+        lineShouldShow.dot1 = dots[parseInt(dis1Index / dots[0].length)][dis1Index % dots[0].length];
+        lineShouldShow.dot2 = dots[parseInt(dis2Index / dots[0].length)][dis2Index % dots[0].length];
     }
-    let dis1 = Math.min(...lst);
-    let dis1Index = lst.indexOf(dis1);
-    lst[lst.indexOf(dis1)] = 2000;
-    let dis2 = Math.min(...lst);
-    let dis2Index = lst.indexOf(dis2);
-    lineShouldShow.dot1 = dots[parseInt(dis1Index / dots[0].length)][dis1Index % dots[0].length];
-    lineShouldShow.dot2 = dots[parseInt(dis2Index / dots[0].length)][dis2Index % dots[0].length];
 });
 
 addEventListener("mousedown", (event) => {
-    if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
-        selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical"));
-        for (let i = 0; i < lines.vertical.length; i++) {
-            for (let j = 0; j < lines.vertical[i].length; j++) {
-                if (
-                    (lines.vertical[i][j].dot1 == lineShouldShow.dot1 && lines.vertical[i][j].dot2 == lineShouldShow.dot2) ||
-                    (lines.vertical[i][j].dot1 == lineShouldShow.dot2 && lines.vertical[i][j].dot2 == lineShouldShow.dot1)
-                ) {
-                    lines.vertical[i].splice(j, 1);
-                    break;
-                }
-            }
-        }
-    } else {
-        selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
-        for (let i = 0; i < lines.horizontal.length; i++) {
-            for (let j = 0; j < lines.horizontal[i].length; j++) {
-                if (
-                    (lines.horizontal[i][j].dot1 == lineShouldShow.dot1 && lines.horizontal[i][j].dot2 == lineShouldShow.dot2) ||
-                    (lines.horizontal[i][j].dot1 == lineShouldShow.dot2 && lines.horizontal[i][j].dot2 == lineShouldShow.dot1)
-                ) {
-                    lines.horizontal[i].splice(j, 1);
-                    break;
-                }
-            }
-        }
-    }
-    for (let row = 0; row < boxes.length; row++) {
-        for (let col = 0; col < boxes[row].length; col++) {
-            for (let line = 0; line < 4; line++) {
-                if (
-                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
-                    (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
-                ) {
-                    if (line == 0) {
-                        boxes[row][col].topSel = true;
-                        if (row != 0) {
-                            boxes[row - 1][col].bottomSel = true;
-                        }
-                    } else if (line == 1) {
-                        boxes[row][col].rightSel = true;
-                        if (col != boxes[row].length - 1) {
-                            boxes[row][col + 1].leftSel = true;
-                        }
-                    } else if (line == 2) {
-                        boxes[row][col].bottomSel = true;
-                        if (row != boxes.length - 1) {
-                            boxes[row + 1][col].topSel = true;
-                        }
-                    } else {
-                        boxes[row][col].leftSel = true;
-                        if (col != 0) {
-                            boxes[row][col - 1].rightSel = true;
-                        }
+    if (turn == "player") {
+        turn = "computer";
+
+        if (lineShouldShow.dot1.x == lineShouldShow.dot2.x) {
+            selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "vertical"));
+            for (let i = 0; i < lines.vertical.length; i++) {
+                for (let j = 0; j < lines.vertical[i].length; j++) {
+                    if (
+                        (lines.vertical[i][j].dot1 == lineShouldShow.dot1 && lines.vertical[i][j].dot2 == lineShouldShow.dot2) ||
+                        (lines.vertical[i][j].dot1 == lineShouldShow.dot2 && lines.vertical[i][j].dot2 == lineShouldShow.dot1)
+                    ) {
+                        lines.vertical[i].splice(j, 1);
+                        break;
                     }
-                    break;
+                }
+            }
+        } else {
+            selectLines.push(new Line(lineShouldShow.dot1, lineShouldShow.dot2, "white", "horizontal"));
+            for (let i = 0; i < lines.horizontal.length; i++) {
+                for (let j = 0; j < lines.horizontal[i].length; j++) {
+                    if (
+                        (lines.horizontal[i][j].dot1 == lineShouldShow.dot1 && lines.horizontal[i][j].dot2 == lineShouldShow.dot2) ||
+                        (lines.horizontal[i][j].dot1 == lineShouldShow.dot2 && lines.horizontal[i][j].dot2 == lineShouldShow.dot1)
+                    ) {
+                        lines.horizontal[i].splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+        for (let row = 0; row < boxes.length; row++) {
+            for (let col = 0; col < boxes[row].length; col++) {
+                for (let line = 0; line < 4; line++) {
+                    if (
+                        (lineShouldShow.dot1 == boxes[row][col].lines[line].dot1 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot2) ||
+                        (lineShouldShow.dot1 == boxes[row][col].lines[line].dot2 && lineShouldShow.dot2 == boxes[row][col].lines[line].dot1)
+                    ) {
+                        if (line == 0) {
+                            boxes[row][col].topSel = true;
+                            if (row != 0) {
+                                boxes[row - 1][col].bottomSel = true;
+                            }
+                        } else if (line == 1) {
+                            boxes[row][col].rightSel = true;
+                            if (col != boxes[row].length - 1) {
+                                boxes[row][col + 1].leftSel = true;
+                            }
+                        } else if (line == 2) {
+                            boxes[row][col].bottomSel = true;
+                            if (row != boxes.length - 1) {
+                                boxes[row + 1][col].topSel = true;
+                            }
+                        } else {
+                            boxes[row][col].leftSel = true;
+                            if (col != 0) {
+                                boxes[row][col - 1].rightSel = true;
+                            }
+                        }
+                        break;
+                    }
                 }
             }
         }
     }
-    console.log(lines);
 });
 
 function draw() {
@@ -299,6 +369,14 @@ function draw() {
         ctx.stroke();
     });
 
+    botSelectedLines.forEach((line) => {
+        ctx.beginPath();
+        ctx.moveTo(line.dot1.x, line.dot1.y);
+        ctx.lineTo(line.dot2.x, line.dot2.y);
+        ctx.fillStyle = line.color;
+        ctx.stroke();
+    });
+
     for (let i = 0; i < boxes.length; i++) {
         for (let j = 0; j < boxes[i].length; j++) {
             boxes[i][j].draw();
@@ -311,5 +389,14 @@ function animate() {
     ctx.fillStyle = "rgba(255 , 255 , 255 , 0.1)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     draw();
+    if (turn == "computer") {
+        // setTimeout(() => {
+        // bot.calculate();
+        let line = bot.calculate();
+        line.color = "red";
+        botSelectedLines.push(line);
+        turn = "player";
+        // }, (Math.random() + 1) * 1000);
+    }
 }
 animate();
